@@ -66,7 +66,6 @@
       constructor(el, audio) {
         this.el = el;
         this.audio = audio;
-        this.tid = null;
         this.setEndedListener();
       }
 
@@ -77,7 +76,6 @@
 
       play() {
         if (!this.audio.paused) {
-          clearTimeout(this.tid);
           this.audio.pause();
           this.audio.currentTime = 0;
         }
