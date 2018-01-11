@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <title>JS Drum Kit</title>
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
 
@@ -57,10 +59,61 @@
   <audio data-key="75" src="sounds/tom.wav"></audio>
   <audio data-key="76" src="sounds/tink.wav"></audio>
 
-<script>
+  <script>
+    let soundMap = new Map();
 
-</script>
+    class Sound {
+      constructor(el, audio) {
+        this.el = el;
+        this.audio = audio;
+        this.tid = null;
+        this.setEndedListener();
+      }
+
+      setEndedListener() {
+        if (this.el && this.audio)
+          this.audio.addEventListener("ended", () => this.el.classList.remove("playing"));
+      }
+
+      play() {
+        if (!this.audio.paused) {
+          clearTimeout(this.tid);
+          this.audio.pause();
+          this.audio.currentTime = 0;
+        }
+        this.el.classList.add("playing");
+        this.audio.play();
+      }
+
+    }
+
+    function initialize() {
+      createSoundMap();
+      setListener();
+    }
+
+    function createSoundMap() {
+      let audioTags = document.getElementsByTagName("audio");
+      for (let audio of audioTags) {
+        soundMap.set(parseInt(audio.dataset.key), new Sound(document.querySelector(
+          `div[data-key='${audio.dataset.key}']`), audio));
+      }
+    }
+
+    function setListener() {
+      window.addEventListener("keyup", (event) => {
+        let sound = soundMap.get(event.keyCode);
+        console.log(event.keyCode);
+        if (sound) {
+          sound.play();
+        }
+      });
+    }
+
+    initialize();
+  </script>
 
 
 </body>
+
 </html>
