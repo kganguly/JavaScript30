@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Type Ahead 👀</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <form class="search-form">
+    <input type="text" class="search" placeholder="City or State">
+    <ul class="suggestions">
+      <li>Filter for a city</li>
+      <li>or a state</li>
+    </ul>
+  </form>
+  <script>
+    const endpoint =
+      'https://gist.githubusercontent.com/Miserlou/c5cd8364bf9b2420bb29/raw/2bf258763cdddd704f8ffd3ea9a3e81d25e2c6f6/cities.json';
+
+    let cities;
+    let lastSearchTerm;
+    const searchBox = document.querySelector("input.search");
+    const suggestionList = document.querySelector("ul.suggestions");
+
+    init();
+
+    function init() {
+      loadCities()
+        .then(() => search(lastSearchTerm));
+      searchBox.addEventListener("input", (e) => search(e.currentTarget.value));
+      searchBox.focus();
+    }
+
+    function loadCities() {
+      return fetch(endpoint)
+        .then(response => response.json())
+        //.then(data => new Promise((resolve, reject) => setTimeout(() => resolve(data), 5000)))
+        .then(data => cities = data);
+    }
+
+    function search(searchTerm) {
+      if (!cities) {
+        lastSearchTerm = searchTerm;
+        return;
+      }
+      if (!searchTerm || searchTerm.trim().length === 0) {
+        displayMatches();
+        return;
+      }
+      const regexp = new RegExp(escapeRegexpString(searchTerm), 'gi');
+      displayMatches(findMatches(regexp), regexp);
+    }
+
+    function findMatches(regexp) {
+      return cities.filter(city => regexp.test(city.city) || regexp.test(city.state));
+    }
+
+    function displayMatches(matches, regexp) {
+      suggestionList.innerHTML = "";
+
+      if (!matches) {
+        suggestionList.innerHTML = `
+          <li>Filter for a city</li> 
+          <li> or a state </li>`;
+      } else {
+        const suggestionsHTML = matches.map(city => {
+          let location = `${city.city}, ${city.state}`;
+          if (regexp) location = location.replace(regexp, "<span class='hl'>$&</span>");
+          const population = numberWithCommas(city.population);
+
+          return `
+            <li>
+              <span>${location}</span>
+              <span class='population'>${population}</span>
+            </li>
+            `;
+        }).join('');
+        suggestionList.innerHTML = suggestionsHTML;
+      }
+    }
+
+    function escapeRegexpString(searchTerm) {
+      return searchTerm.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+    }
+
+    function numberWithCommas(x) {
+      return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    }
+  </script>
+</body>
+
+</html>
